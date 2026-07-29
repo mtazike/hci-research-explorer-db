@@ -1,0 +1,109 @@
+<!-- Author: Mahya Tazike -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HCI Research Explorer</title>
+</head>
+<body>
+    <h1>HCI Research Explorer</h1>
+
+    <form method="GET" action="/search">
+        <label for="keyword">Search by title keyword:</label>
+        <input type="text" name="keyword" id="keyword" placeholder="e.g. immersive">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if papers %}
+        <h2>Results:</h2>
+        <ul>
+        {% for paper in papers %}
+            <li>
+                <strong>{{ paper[1] }}</strong> ({{ paper[2] }})
+            </li>
+        {% endfor %}
+        </ul>
+    {% elif searched %}
+        <p>No papers found.</p>
+    {% endif %}
+
+    <hr>
+
+    <form method="GET" action="/search-author">
+        <label for="lastname">Search by author (last name):</label>
+        <input type="text" name="lastname" id="lastname" placeholder="e.g. Marshall">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if authors_results %}
+        <h2>Papers by this author:</h2>
+        <ul>
+        {% for row in authors_results %}
+            <li>
+                <strong>{{ row[0] }} {{ row[1] }}</strong> —
+                {{ row[3] }} ({{ row[4] }})
+            </li>
+        {% endfor %}
+        </ul>
+    {% elif author_searched %}
+        <p>No papers found for this author.</p>
+    {% endif %}
+
+    <hr>
+
+    <form method="GET" action="/search-category">
+        <label for="category">Search by category:</label>
+        <select name="category" id="category">
+            <option value="cs.HC">cs.HC</option>
+            <option value="cs.AI">cs.AI</option>
+            <option value="cs.CY">cs.CY</option>
+            <option value="cs.DL">cs.DL</option>
+            <option value="cs.DB">cs.DB</option>
+            <option value="cs.IR">cs.IR</option>
+            <option value="cs.CL">cs.CL</option>
+            <option value="cs.RO">cs.RO</option>
+            <option value="cs.IT">cs.IT</option>
+            <option value="cs.OH">cs.OH</option>
+            <option value="math.IT">math.IT</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if category_results %}
+        <h2>Papers in this category:</h2>
+        <ul>
+        {% for row in category_results %}
+            <li>
+                <strong>{{ row[2] }}</strong> ({{ row[3] }}) — {{ row[0] }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% elif category_searched %}
+        <p>No papers found for this category.</p>
+    {% endif %}
+
+    <hr>
+
+    <form method="GET" action="/search-year">
+        <label for="year">Browse papers by year:</label>
+        <input type="number" name="year" id="year" placeholder="e.g. 2007" min="1990" max="2026">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if year_results %}
+        <h2>Papers updated in this year:</h2>
+        <ul>
+        {% for row in year_results %}
+            <li>
+                <strong>{{ row[1] }}</strong> ({{ row[2] }})
+            </li>
+        {% endfor %}
+        </ul>
+    {% elif year_searched %}
+        <p>No papers found for this year.</p>
+    {% endif %}
+
+    <hr>
+    <p><a href="/trend">View Publication Trend Chart</a></p>
+    <p><a href="/top-authors">View Top Authors</a></p>
+</body>
+</html>

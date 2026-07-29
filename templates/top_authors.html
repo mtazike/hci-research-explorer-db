@@ -1,0 +1,17 @@
+<!-- Author: Mahya Tazike -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Top Authors - HCI Research Explorer</title>
+</head>
+<body>
+    <h1>Top Authors by Number of Papers</h1>
+    <p><a href="/">Back to search</a></p>
+
+    <ol>
+    {% for author in authors %}
+        <li>{{ author[0] }} {{ author[1] }} — {{ author[2] }} paper(s)</li>
+    {% endfor %}
+    </ol>
+</body>
+</html>
