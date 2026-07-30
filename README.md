@@ -2,7 +2,7 @@
 
 A simple Flask web application and MySQL database for searching Human-Computer Interaction (HCI) research papers. This project was developed for the Applied Database Technologies course.
 
-**Author:** Mahya Tazike (individual submission)
+**Author:** Mahya Tazike 
 
 ## Project Overview
 
@@ -68,6 +68,3 @@ python app.py
 
 Cornell University. (2024). *arXiv Dataset* [Data set]. Kaggle. https://www.kaggle.com/datasets/Cornell-University/arxiv
 
-## AI Assistance
-
-Claude was used to help generate portions of the application code and to debug SQL connection errors. The database design, ER model, normalization, and SQL queries were designed and implemented independently by Mahya Tazike.
