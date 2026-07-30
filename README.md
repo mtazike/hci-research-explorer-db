@@ -23,9 +23,8 @@ Users can:
 | File / Folder | Description |
 |---|---|
 | `schema.sql` | Creates the database and all five tables (`papers`, `authors`, `categories`, `paper_authors`, `paper_categories`) with primary/foreign keys and constraints. |
-| `sample_inserts.sql` | Inserts 15 real sample papers (with their authors and categories) drawn from the filtered HCI dataset. |
 | `queries.sql` | The six application queries (search by title, author, category, year range; publication trend; top authors). |
-| `full_database.sql` | The complete, reproducible script — combines `schema.sql`, `sample_inserts.sql`, and `queries.sql` into a single file. Starts with `DROP DATABASE IF EXISTS`, so it can be re-run from a clean state. |
+| `full_database.sql` | The complete, reproducible script — combines the schema, sample data, and queries into a single file. Starts with `DROP DATABASE IF EXISTS`, so it can be re-run from a clean state. |
 | `app.py` | Flask application implementing CRUD operations, search features, and analytics. |
 | `templates/` | HTML templates (`index.html`, `trend.html`, `top_authors.html`, `edit.html`) rendered by Flask. |
 
