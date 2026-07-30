@@ -19,6 +19,11 @@
         {% for paper in papers %}
             <li>
                 <strong>{{ paper[1] }}</strong> ({{ paper[2] }})
+                <a href="/edit-paper?paper_id={{ paper[0] }}">Edit</a>
+                <form method="POST" action="/delete-paper" style="display:inline;">
+                    <input type="hidden" name="paper_id" value="{{ paper[0] }}">
+                    <button type="submit" onclick="return confirm('Delete this paper?');">Delete</button>
+                </form>
             </li>
         {% endfor %}
         </ul>
@@ -84,13 +89,14 @@
     <hr>
 
     <form method="GET" action="/search-year">
-        <label for="year">Browse papers by year:</label>
-        <input type="number" name="year" id="year" placeholder="e.g. 2007" min="1990" max="2026">
+        <label for="start_year">Browse papers by year range:</label>
+        From: <input type="number" name="start_year" id="start_year" placeholder="e.g. 2007" min="1990" max="2026">
+        To: <input type="number" name="end_year" id="end_year" placeholder="e.g. 2020" min="1990" max="2026">
         <button type="submit">Search</button>
     </form>
 
     {% if year_results %}
-        <h2>Papers updated in this year:</h2>
+        <h2>Papers updated in this range:</h2>
         <ul>
         {% for row in year_results %}
             <li>
@@ -99,11 +105,50 @@
         {% endfor %}
         </ul>
     {% elif year_searched %}
-        <p>No papers found for this year.</p>
+        <p>No papers found for this year range.</p>
     {% endif %}
 
     <hr>
     <p><a href="/trend">View Publication Trend Chart</a></p>
     <p><a href="/top-authors">View Top Authors</a></p>
+
+    <hr>
+
+    <h2>Add a New Paper</h2>
+    <form method="POST" action="/add-paper">
+        <label for="new_paper_id">Paper ID:</label>
+        <input type="text" name="paper_id" id="new_paper_id" placeholder="e.g. 9999.0001" required>
+        <br><br>
+
+        <label for="new_title">Title:</label>
+        <input type="text" name="title" id="new_title" size="50" required>
+        <br><br>
+
+        <label for="new_date">Update Date:</label>
+        <input type="date" name="update_date" id="new_date" required>
+        <br><br>
+
+        <label for="new_category">Category:</label>
+        <select name="category" id="new_category">
+            <option value="cs.HC">cs.HC</option>
+            <option value="cs.AI">cs.AI</option>
+            <option value="cs.CY">cs.CY</option>
+            <option value="cs.DL">cs.DL</option>
+            <option value="cs.DB">cs.DB</option>
+            <option value="cs.IR">cs.IR</option>
+            <option value="cs.CL">cs.CL</option>
+            <option value="cs.RO">cs.RO</option>
+            <option value="cs.IT">cs.IT</option>
+            <option value="cs.OH">cs.OH</option>
+            <option value="math.IT">math.IT</option>
+        </select>
+        <br><br>
+
+        <button type="submit">Add Paper</button>
+    </form>
+
+    {% if add_message %}
+        <p><strong>{{ add_message }}</strong></p>
+    {% endif %}
 </body>
 </html>
