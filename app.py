@@ -35,7 +35,8 @@ def home():
         papers=None, searched=False,
         authors_results=None, author_searched=False,
         category_results=None, category_searched=False,
-        year_results=None, year_searched=False
+        year_results=None, year_searched=False,
+        add_message=None
     )
 
 @app.route("/search")
@@ -62,7 +63,8 @@ def search():
         papers=results, searched=True,
         authors_results=None, author_searched=False,
         category_results=None, category_searched=False,
-        year_results=None, year_searched=False
+        year_results=None, year_searched=False,
+        add_message=None
     )
 
 @app.route("/search-author")
@@ -93,7 +95,8 @@ def search_author():
         papers=None, searched=False,
         authors_results=results, author_searched=True,
         category_results=None, category_searched=False,
-        year_results=None, year_searched=False
+        year_results=None, year_searched=False,
+        add_message=None
     )
 
 @app.route("/search-category")
@@ -124,23 +127,25 @@ def search_category():
         papers=None, searched=False,
         authors_results=None, author_searched=False,
         category_results=results, category_searched=True,
-        year_results=None, year_searched=False
+        year_results=None, year_searched=False,
+        add_message=None
     )
 
 @app.route("/search-year")
 def search_year():
     """
-    Query 4: Retrieve papers by year of last update.
+    Query 4: Retrieve papers within a year range of last update.
     Application functionality: Allows users to browse papers
-    by the year of their last update.
+    updated between a start year and an end year (inclusive).
     """
-    year = request.args.get("year", "")
+    start_year = request.args.get("start_year", "")
+    end_year = request.args.get("end_year", "")
 
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT paper_id, title, update_date FROM papers WHERE YEAR(update_date) = %s ORDER BY update_date ASC",
-        (year,)
+        "SELECT paper_id, title, update_date FROM papers WHERE YEAR(update_date) BETWEEN %s AND %s ORDER BY update_date ASC",
+        (start_year, end_year)
     )
     results = cursor.fetchall()
     cursor.close()
@@ -151,7 +156,8 @@ def search_year():
         papers=None, searched=False,
         authors_results=None, author_searched=False,
         category_results=None, category_searched=False,
-        year_results=results, year_searched=True
+        year_results=results, year_searched=True,
+        add_message=None
     )
 
 @app.route("/trend")
@@ -177,14 +183,12 @@ def trend():
     years = [str(row[0]) for row in results]
     counts = [row[1] for row in results]
 
-    # Build a simple bar chart
     fig, ax = plt.subplots()
     ax.bar(years, counts, color="steelblue")
     ax.set_xlabel("Year")
     ax.set_ylabel("Number of Papers")
     ax.set_title("HCI Paper Publication Trend")
 
-    # Convert the chart to a base64-encoded image to embed directly in HTML
     buffer = io.BytesIO()
     fig.savefig(buffer, format="png")
     plt.close(fig)
@@ -215,6 +219,138 @@ def top_authors():
     connection.close()
 
     return render_template("top_authors.html", authors=results)
+
+@app.route("/add-paper", methods=["POST"])
+def add_paper():
+    """
+    Create: Adds a new paper to the database, along with its category link.
+    Application functionality: Lets users add a new paper record directly
+    from the web interface.
+    """
+    paper_id = request.form.get("paper_id")
+    title = request.form.get("title")
+    update_date = request.form.get("update_date")
+    category = request.form.get("category")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO papers (paper_id, title, update_date) VALUES (%s, %s, %s)",
+            (paper_id, title, update_date)
+        )
+        cursor.execute(
+            "SELECT category_id FROM categories WHERE category_code = %s",
+            (category,)
+        )
+        cat_row = cursor.fetchone()
+        if cat_row:
+            cursor.execute(
+                "INSERT INTO paper_categories (paper_id, category_id) VALUES (%s, %s)",
+                (paper_id, cat_row[0])
+            )
+        connection.commit()
+        message = f"Paper '{title}' added successfully."
+    except mysql.connector.Error as err:
+        connection.rollback()
+        message = f"Error adding paper: {err}"
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "index.html",
+        papers=None, searched=False,
+        authors_results=None, author_searched=False,
+        category_results=None, category_searched=False,
+        year_results=None, year_searched=False,
+        add_message=message
+    )
+
+@app.route("/delete-paper", methods=["POST"])
+def delete_paper():
+    """
+    Delete: Removes a paper and its related junction-table rows from the database.
+    Application functionality: Lets users delete a paper record directly
+    from the search results.
+    """
+    paper_id = request.form.get("paper_id")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute("DELETE FROM paper_authors WHERE paper_id = %s", (paper_id,))
+        cursor.execute("DELETE FROM paper_categories WHERE paper_id = %s", (paper_id,))
+        cursor.execute("DELETE FROM papers WHERE paper_id = %s", (paper_id,))
+        connection.commit()
+        message = f"Paper '{paper_id}' deleted successfully."
+    except mysql.connector.Error as err:
+        connection.rollback()
+        message = f"Error deleting paper: {err}"
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "index.html",
+        papers=None, searched=False,
+        authors_results=None, author_searched=False,
+        category_results=None, category_searched=False,
+        year_results=None, year_searched=False,
+        add_message=message
+    )
+
+@app.route("/edit-paper", methods=["GET"])
+def edit_paper_form():
+    """
+    Update (step 1): Displays a form pre-filled with the paper's current title,
+    so the user can edit it.
+    """
+    paper_id = request.args.get("paper_id")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT paper_id, title FROM papers WHERE paper_id = %s", (paper_id,))
+    paper = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    return render_template("edit.html", paper=paper)
+
+@app.route("/edit-paper", methods=["POST"])
+def edit_paper_save():
+    """
+    Update (step 2): Saves the edited title back to the database.
+    Application functionality: Lets users update a paper's title
+    directly from the web interface.
+    """
+    paper_id = request.form.get("paper_id")
+    new_title = request.form.get("title")
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            "UPDATE papers SET title = %s WHERE paper_id = %s",
+            (new_title, paper_id)
+        )
+        connection.commit()
+        message = f"Paper '{paper_id}' updated successfully."
+    except mysql.connector.Error as err:
+        connection.rollback()
+        message = f"Error updating paper: {err}"
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "index.html",
+        papers=None, searched=False,
+        authors_results=None, author_searched=False,
+        category_results=None, category_searched=False,
+        year_results=None, year_searched=False,
+        add_message=message
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
